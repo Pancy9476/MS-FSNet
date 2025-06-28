@@ -1,1 +1,1 @@
-The full code will be released upon acceptance of the paper.
+This is the code for the paper “MS-FSNet: Exploring Pan-Sharpening via Hierarchical Joint Modeling of Spatial Enhancement Guided by Frequency Attention”, submitted to IEEE Transactions on Geoscience and Remote Sensing. The full code will be released upon acceptance of the paper.
