@@ -21,42 +21,6 @@ def tt(model, dataloader, device, save_dir):
         out, _ = model(pan, ms)
         out = out.clamp(0, 1)
 
-        # ==== 可视化特征图 ==== 灰度
-        # os.makedirs(f"vis/fly", exist_ok=True)
-        # with torch.no_grad():
-        #     import numpy as np
-        #     import matplotlib.pyplot as plt
-        #     import matplotlib.cm as cm
-        #     from PIL import Image
-        #     # 傅里叶变换 + 频谱居中
-        #     freq = torch.fft.fftshift(torch.fft.fft2(gt[0]), dim=(-2, -1))
-        #     # freq = torch.fft.fft2(gt[0])
-        #     amp = torch.log1p(torch.abs(freq)).cpu().numpy()  # (3, H, W)
-        #     rgb_img = np.zeros((amp.shape[1], amp.shape[2], 3), dtype=np.uint8)  # HWC
-        #     # 获取 colormap 对象
-        #     colormap = cm.get_cmap('viridis')
-        #     for i in range(3):
-        #         ch = amp[i]
-        #         ch = (ch - ch.min()) / (ch.max() - ch.min() + 1e-8)  # 归一化到 [0,1]
-        #         # 使用 colormap，将灰度图映射为 RGBA，再取 RGB
-        #         colored = colormap(ch)[:, :, :3]  # shape: (H, W, 3)
-        #         rgb_img[:, :, i] = (colored[:, :, i] * 255).astype(np.uint8)  # 每个通道分别给 RGB
-        #         # 保存图像
-        #     Image.fromarray(rgb_img).save(f"vis/fly/{idx}.png")
-
-            # fly_np = fly.cpu().numpy()
-            # # 分别保存三个通道的彩色频谱图
-            # for i in range(3):
-            #     ch = fly_np[i]
-            #     ch = (ch - ch.min()) / (ch.max() - ch.min() + 1e-8)  # 归一化
-            #     plt.imsave(f"vis/fly/{idx}.png",ch,cmap='viridis')
-            # freq = torch.fft.fft2(gt)
-            # fly = torch.abs(freq)
-            # vis_img1 = torch.clamp(fly[0], min=0, max=1)
-            # vis_img1 = vis_img1.permute(1, 2, 0).cpu().detach().numpy()
-            # # vis_img1 = (vis_img1 - vis_img1.min()) / (vis_img1.max() - vis_img1.min() + 1e-8)
-            # plt.imsave(f"vis/fly/{idx}.png", vis_img1, cmap='viridis')
-
 
         # Save result image
         filename = os.path.splitext(os.path.basename(name[0]))[0]
@@ -87,3 +51,4 @@ if __name__ == '__main__':
     # print(f"Mamba Total params: {total_params :.6f}M")
 
     tt(model, test_loader, device, args.save_dir)
+
