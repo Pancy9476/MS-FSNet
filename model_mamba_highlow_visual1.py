@@ -65,25 +65,6 @@ class FrequencyAttention(nn.Module):
 
         amp_masked = amp * mask
 
-        # # ==== 可视化特征图 ==== 灰度
-        # if self.vis_prefix is not None:
-        #     os.makedirs(f"vis/amp/{self.h}", exist_ok=True)
-        #     with torch.no_grad():
-        #         vis_img1 = nn.Conv2d(C, 3, 3, padding=1).to(device=x.device)(amp[0])
-        #         vis_img1 = torch.clamp(vis_img1, min=0, max=1)
-        #         vis_img1 = vis_img1.permute(1, 2, 0).cpu().detach().numpy()
-        #         # vis_img1 = (vis_img1 - vis_img1.min()) / (vis_img1.max() - vis_img1.min() + 1e-8)
-        #         plt.imsave(f"vis/amp/{self.h}/{self.vis_prefix}.png", vis_img1, cmap='plasma')
-        #         self.h = self.h + 1
-        # # ==== 可视化特征图 ==== 灰度
-        # if self.vis_prefix is not None:
-        #     os.makedirs(f"vis/amp_masked/{self.l}", exist_ok=True)
-        #     with torch.no_grad():
-        #         # vis_img2 =
-        #         vis_img2 = amp_masked[0].mean(dim=0).cpu().detach().numpy()  # B=0，通道平均
-        #         plt.imsave(f"vis/amp_masked/{self.l}/{self.vis_prefix}.png", vis_img2, cmap='gray')
-        #         self.l = self.l + 1
-
         attn = self.conv(amp_masked)
         return x * attn
 
@@ -121,72 +102,9 @@ class MambaBlock(nn.Module):
         H = W = int(N ** 0.5)
         x_2d = x.transpose(1, 2).view(B, C, H, W)
         x_2d = self.freq_attn(x_2d)
-
-        # # ==== 可视化特征图 ==== 灰度
-        # if self.vis_prefix is not None:
-        #     os.makedirs(f"vis/feature/{self.i}", exist_ok=True)
-        #     with torch.no_grad():
-        #         vis_img = x_2d[0].mean(dim=0).cpu().detach().numpy()  # B=0，通道平均
-        #         plt.imsave(f"vis/feature/{self.i}/{self.vis_prefix}.png", vis_img, cmap='gray')
-        #         self.i = self.i +1
-
         x = x_2d.flatten(2).transpose(1, 2)
         return self.mamba(self.norm(x))
 
-# # ==== 可视化特征图 ==== 彩色
-# def to_rgb_pca(feat):
-#     """
-#     输入：feat [C, H, W]
-#     输出：归一化后的 RGB 图像 [3, H, W]
-#     """
-#     assert feat.ndim == 3, f"Expected [C, H, W] but got shape {feat.shape}"
-#     C, H, W = feat.shape
-#
-#     # [C, H, W] → [H*W, C]
-#     x = feat.reshape(C, -1).T  # shape [N, C] = [H*W, C]
-#     x = x - x.mean(0, keepdim=True)
-#
-#     # SVD: x = U @ S @ Vh,  Vh ∈ [C, C]
-#     U, S, Vh = torch.linalg.svd(x, full_matrices=False)  # Vh ∈ [C, C]
-#
-#     # 主成分映射到前三个方向： [H*W, 3]
-#     x_pca = x @ Vh[:3, :].T  # (H*W, 3)
-#
-#     # reshape → [3, H, W]
-#     x_pca = x_pca.T.reshape(3, H, W)
-#
-#     # 归一化 → [0,1]
-#     x_pca = (x_pca - x_pca.min()) / (x_pca.max() - x_pca.min() + 1e-8)
-#     return x_pca.clamp(0, 1)
-#
-# class MambaBlock(nn.Module):
-#     def __init__(self, dim, vis_prefix=None):
-#         super().__init__()
-#         self.norm = nn.LayerNorm(dim)
-#         self.mamba = Mamba(dim)
-#         self.freq_attn = DualBranchFrequencyBlock(dim)
-#         self.vis_prefix = vis_prefix
-#         self.i = 0
-#
-#     def forward(self, x):
-#         B, N, C = x.shape
-#         H = W = int(N ** 0.5)
-#         x_2d = x.transpose(1, 2).view(B, C, H, W)
-#         x_2d = self.freq_attn(x_2d)
-#
-#         # === 可视化特征图 ===
-#         if self.vis_prefix is not None:
-#             os.makedirs(f"vis/feature_rgb/{self.i}", exist_ok=True)
-#             with torch.no_grad():
-#                 rgb = to_rgb_pca(x_2d[0])
-#                 plt.imsave(
-#                     f"vis/feature_rgb/{self.i}/{self.vis_prefix}.png",
-#                     rgb.permute(1, 2, 0).cpu().numpy()
-#                 )
-#                 self.i = self.i + 1
-#
-#         x = x_2d.flatten(2).transpose(1, 2)
-#         return self.mamba(self.norm(x))
 
 class Down(nn.Module):
     def __init__(self, in_ch, out_ch, vis_prefix=None):
@@ -292,4 +210,5 @@ class MultiScaleMambaFusion(nn.Module):
 
         return out, {"out_256": out_256, "out_128": out_128, "out_64": out_64,
                      "feat_256": feat_256, "feat_128": feat_128, "feat_64": feat_64}
+
 
