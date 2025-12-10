@@ -1,8 +1,6 @@
 import torch
 import os
-# from model import MultiScaleTransformerFusion
 from model_mamba_highlow_visual1 import MultiScaleMambaFusion
-# from model_mamba_highlow_vl import MultiScaleMambaFusion
 from dataset import MyFusionDataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -12,16 +10,12 @@ import time
 @torch.no_grad()
 def tt(model, dataloader, device, save_dir):
     model.eval()
-    # total_params = (sum(p.numel() for p in model.parameters())) / 1e6
-    # print(f"Total parameters: {total_params :.6f}M")  # 输出以百万为单位
     st=time.time()
     os.makedirs(save_dir, exist_ok=True)
     for idx, (pan, ms, gt, name) in enumerate(tqdm(dataloader, desc="Testing")):
         pan, ms = pan.to(device), ms.to(device)
         out, _ = model(pan, ms)
         out = out.clamp(0, 1)
-
-
         # Save result image
         filename = os.path.splitext(os.path.basename(name[0]))[0]
         vutils.save_image(out, os.path.join(save_dir, f"{filename}.png"))
@@ -43,12 +37,10 @@ if __name__ == '__main__':
     test_set = MyFusionDataset(split='test', root_dir=args.root_dir)
     test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False, num_workers=4)
 
-    # model = MultiScaleTransformerFusion().to(device)
     model = MultiScaleMambaFusion().to(device)
     model.load_state_dict(torch.load(args.model_path, map_location=device))
 
-    # total_params = (sum(p.numel() for p in model.parameters())) / 1e6
-    # print(f"Mamba Total params: {total_params :.6f}M")
 
     tt(model, test_loader, device, args.save_dir)
+
 
